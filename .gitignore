@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+/generated/prisma

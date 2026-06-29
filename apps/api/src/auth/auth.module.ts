@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller';
 import { UsuariosModule } from '../usuarios/usuarios.module';
 import { PasswordService } from './password.service';
 import { JwtStrategy } from './jwt.strategy';
-import { TokenService } from './token.service'; // 1. Importamos el TokenService
+import { TokenService } from './token.service';
 
 @Module({
   imports: [
@@ -17,7 +17,9 @@ import { TokenService } from './token.service'; // 1. Importamos el TokenService
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET', 'secretKey_minimarket_2026'),
-        signOptions: { expiresIn: '8h' },
+        signOptions: {
+          expiresIn: parseInt(configService.get<string>('JWT_EXPIRES') ?? '3600', 10),
+        },
       }),
     }),
     forwardRef(() => UsuariosModule),

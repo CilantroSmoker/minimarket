@@ -1,45 +1,54 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { UsuariosService } from '../usuarios/usuarios.service';
+import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from './dto/signup.dto';
 import { PasswordService } from './password.service';
 import { TokenService } from './token.service';
-import { AuthUser } from './roles';
+import { AuthUser, ROLES } from './roles';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly usuariosService: UsuariosService,
     private readonly passwordService: PasswordService,
     private readonly tokenService: TokenService,
   ) { }
 
   async login(dto: LoginDto) {
-    const usuario = await this.prisma.usuario.findUnique({
-      where: { email: dto.email.toLowerCase().trim() },
-      include: this.usuarioInclude,
-    });
+    const usuario = await this.usuariosService.findByEmail(dto.email);
 
     if (!usuario || !usuario.activo) throw new UnauthorizedException('Credenciales invalidas');
 
-    // Validación segura con tu nuevo PasswordService de bcrypt
     const passwordOk = await this.passwordService.verify(dto.password, usuario.passwordHash);
     if (!passwordOk) throw new UnauthorizedException('Credenciales invalidas');
 
-    // Aquí se genera el AuthUser con todo el RBAC (id, email, rol, permisos)
     const user = this.toAuthUser(usuario);
-    
-    // Ahora accessToken se generará con formato JWT estándar compatible con el guard
     return { accessToken: this.tokenService.sign(user), user };
   }
 
   async me(user: AuthUser) {
-    const usuario = await this.prisma.usuario.findUnique({
-      where: { id: user.sub },
-      include: this.usuarioInclude,
-    });
+    const usuario = await this.usuariosService.findById(user.sub);
 
     if (!usuario || !usuario.activo) throw new UnauthorizedException('Debe iniciar sesion');
     return this.toAuthUser(usuario);
+  }
+
+  async signup(dto: SignUpDto) {
+    const createDto: CreateUsuarioDto = {
+      nombre: dto.nombre,
+      email: dto.email,
+      password: dto.password,
+      rol: ROLES.VENDEDOR,
+    };
+
+    return this.usuariosService.create(createDto, {
+      sub: 0,
+      email: '',
+      nombre: 'signup',
+      rol: ROLES.VENDEDOR,
+      permisos: [],
+    });
   }
 
   private readonly usuarioInclude = {

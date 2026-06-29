@@ -80,8 +80,8 @@ model DetalleVenta {
   descuento         Float    @default(0)
   subtotal          Float
   stockInsuficiente Boolean  @default(false)
-
-  venta    Venta    @relation(fields: [ventaId], references: [id])
+  
+  venta    Venta    @relation(fields: [ventaId], references: [id], onDelete: Cascade)
   producto Producto @relation(fields: [productoId], references: [id])
 }
 

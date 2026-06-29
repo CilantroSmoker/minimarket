@@ -11,6 +11,7 @@ import { CurrentUser } from './current-user.decorator';
 import { Public } from './public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { SignUpDto } from './dto/signup.dto';
 import { AuthUser } from './roles';
 import { AuthUserDto, ErrorResponseDto, LoginResponseDto } from '../docs/openapi-dtos';
 
@@ -18,6 +19,15 @@ import { AuthUserDto, ErrorResponseDto, LoginResponseDto } from '../docs/openapi
 @ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('signup')
+  @ApiOperation({ summary: 'Registrar un nuevo usuario publico' })
+  @ApiOkResponse({ description: 'Usuario registrado correctamente', type: AuthUserDto })
+  @ApiBadRequestResponse({ description: 'Datos invalidos', type: ErrorResponseDto })
+  signup(@Body() dto: SignUpDto) {
+    return this.authService.signup(dto);
+  }
 
   @Public()
   @Post('login')
